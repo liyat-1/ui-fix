@@ -17,6 +17,7 @@ import { Route as CampaignRouteImport } from './routes/campaign'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OtaIndexRouteImport } from './routes/ota.index'
+import { Route as OtaAnalyticsRouteImport } from './routes/ota.analytics'
 import { Route as OtaStageStageIdRouteImport } from './routes/ota.stage.$stageId'
 
 const StructuredRoute = StructuredRouteImport.update({
@@ -59,6 +60,11 @@ const OtaIndexRoute = OtaIndexRouteImport.update({
   path: '/',
   getParentRoute: () => OtaRoute,
 } as any)
+const OtaAnalyticsRoute = OtaAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => OtaRoute,
+} as any)
 const OtaStageStageIdRoute = OtaStageStageIdRouteImport.update({
   id: '/stage/$stageId',
   path: '/stage/$stageId',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/ota': typeof OtaRouteWithChildren
   '/roi': typeof RoiRoute
   '/structured': typeof StructuredRoute
+  '/ota/analytics': typeof OtaAnalyticsRoute
   '/ota/': typeof OtaIndexRoute
   '/ota/stage/$stageId': typeof OtaStageStageIdRoute
 }
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/canvas': typeof CanvasRoute
   '/roi': typeof RoiRoute
   '/structured': typeof StructuredRoute
+  '/ota/analytics': typeof OtaAnalyticsRoute
   '/ota': typeof OtaIndexRoute
   '/ota/stage/$stageId': typeof OtaStageStageIdRoute
 }
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/ota': typeof OtaRouteWithChildren
   '/roi': typeof RoiRoute
   '/structured': typeof StructuredRoute
+  '/ota/analytics': typeof OtaAnalyticsRoute
   '/ota/': typeof OtaIndexRoute
   '/ota/stage/$stageId': typeof OtaStageStageIdRoute
 }
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/ota'
     | '/roi'
     | '/structured'
+    | '/ota/analytics'
     | '/ota/'
     | '/ota/stage/$stageId'
   fileRoutesByTo: FileRoutesByTo
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/canvas'
     | '/roi'
     | '/structured'
+    | '/ota/analytics'
     | '/ota'
     | '/ota/stage/$stageId'
   id:
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/ota'
     | '/roi'
     | '/structured'
+    | '/ota/analytics'
     | '/ota/'
     | '/ota/stage/$stageId'
   fileRoutesById: FileRoutesById
@@ -201,6 +213,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OtaIndexRouteImport
       parentRoute: typeof OtaRoute
     }
+    '/ota/analytics': {
+      id: '/ota/analytics'
+      path: '/analytics'
+      fullPath: '/ota/analytics'
+      preLoaderRoute: typeof OtaAnalyticsRouteImport
+      parentRoute: typeof OtaRoute
+    }
     '/ota/stage/$stageId': {
       id: '/ota/stage/$stageId'
       path: '/stage/$stageId'
@@ -212,11 +231,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface OtaRouteChildren {
+  OtaAnalyticsRoute: typeof OtaAnalyticsRoute
   OtaIndexRoute: typeof OtaIndexRoute
   OtaStageStageIdRoute: typeof OtaStageStageIdRoute
 }
 
 const OtaRouteChildren: OtaRouteChildren = {
+  OtaAnalyticsRoute: OtaAnalyticsRoute,
   OtaIndexRoute: OtaIndexRoute,
   OtaStageStageIdRoute: OtaStageStageIdRoute,
 }
