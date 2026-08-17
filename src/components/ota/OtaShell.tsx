@@ -1,11 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Bell, Info } from "lucide-react";
+import { BarChart3, Bell, Info, Route as RouteIcon } from "lucide-react";
 import { NOTIFICATIONS } from "@/lib/otaBuster";
 
-const NAV: { to: string; label: string; exact?: boolean }[] = [
-  { to: "/ota", label: "Guest journey", exact: true },
+const NAV: { to: string; label: string; exact?: boolean; icon: typeof BarChart3 }[] = [
+  { to: "/ota", label: "Guest journey", exact: true, icon: RouteIcon },
+  { to: "/ota/analytics", label: "OTA analytics", icon: BarChart3 },
 ];
 
 /** Small label + value pair used across every OTA Buster surface. */
