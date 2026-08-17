@@ -93,9 +93,8 @@ const TEMPLATES = [
  * template selection and the message editor stacked on top of it.
  */
 export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose: () => void }) {
-  const [strategy, setStrategy] = useState<StrategyId>(
-    stage.channel === "text" ? "text" : stage.channel === "both" ? "both" : "email",
-  );
+  const strategy: StrategyId =
+    stage.channel === "text" ? "text" : stage.channel === "both" ? "both" : "email";
   const [messages, setMessages] = useState<SequenceMessage[]>(() =>
     stage.sequence.map((m) => ({ ...m })),
   );
