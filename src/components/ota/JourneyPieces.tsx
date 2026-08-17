@@ -13,7 +13,7 @@ import {
   Pause,
   Play,
   Repeat2,
-  Sparkles,
+  GitBranch,
   Star,
 } from "lucide-react";
 import { Select } from "@/components/editor/Select";
