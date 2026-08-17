@@ -107,6 +107,34 @@ function Th({
 
 const CAP_ICON = { email: Mail, phone: Phone, address: Home } as const;
 
+const CAP_LABEL = {
+  email: "Email addresses",
+  phone: "Phone numbers",
+  address: "Home addresses",
+} as const;
+
+/** Solid, editorial KPI colours — one per metric, no gradients. */
+const KPI_COLOR: Record<string, string> = {
+  ota: "bg-slate-800",
+  reached: "bg-indigo-600",
+  conversions: "bg-teal-700",
+  revenue: "bg-emerald-700",
+  commission: "bg-blue-800",
+  email: "bg-violet-700",
+  phone: "bg-sky-700",
+  address: "bg-cyan-800",
+};
+
+function SolidDelta({ value }: { value: number }) {
+  const up = value >= 0;
+  return (
+    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-white/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-white">
+      {up ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+      {Math.abs(value).toFixed(1)}%
+    </span>
+  );
+}
+
 function OtaAnalyticsScreen() {
   const [period, setPeriod] = useState<AnalyticsPeriod>("30d");
   const [compare, setCompare] = useState(true);
