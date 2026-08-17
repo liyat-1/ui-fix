@@ -246,153 +246,35 @@ export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose
           ))}
         </nav>
 
-        {/* Body */}
-        <div className="min-h-0 flex-1 overflow-hidden bg-slate-50">
-          {step === 0 ? (
-            <div className="grid h-full grid-cols-1 overflow-hidden lg:grid-cols-[31rem_minmax(0,1fr)]">
-              <div className="min-h-0 overflow-y-auto border-r border-slate-200 bg-white p-5">
-                <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">
-                  Select channel strategy
-                </h3>
-                <p className="mt-1 text-[12.5px] text-slate-500">
-                  Choose how this campaign will be delivered and preview each experience.
-                </p>
-                <div className="mt-4 space-y-3">
-                  {STRATEGIES.map((s) => {
-                    const active = s.id === strategy;
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => pickStrategy(s.id)}
-                        aria-pressed={active}
-                        className={`w-full rounded-xl border p-4 text-left transition-colors ${
-                          active
-                            ? "border-blue-600 bg-blue-50/60 ring-1 ring-blue-600"
-                            : "border-slate-200 bg-white hover:border-slate-300"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <span className="flex items-center gap-2.5">
-                            <span
-                              className={`grid size-8 place-items-center rounded-lg ${
-                                active ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500"
-                              }`}
-                            >
-                              <s.icon size={15} />
-                            </span>
-                            <span className="text-[14px] font-semibold text-slate-900">
-                              {s.label}
-                            </span>
-                          </span>
-                          <span
-                            className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${
-                              active
-                                ? "border-blue-600 bg-blue-600 text-white"
-                                : "border-slate-300 bg-white"
-                            }`}
-                          >
-                            {active ? <Check size={12} /> : null}
-                          </span>
-                        </div>
-                        <p className="mt-2.5 text-[12.5px] leading-relaxed text-slate-500">
-                          {s.copy}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+        {/* Body — the sequence is the whole editor */}
+        <div className="min-h-0 flex-1 overflow-hidden border-t border-slate-200 bg-slate-50">
+          <div className="h-full overflow-y-auto px-5 py-7">
+            <div className="mx-auto w-full max-w-5xl">
+              <JourneyCanvas
+                stage={stage}
+                nodes={nodes}
+                messages={messages}
+                channel={channel}
+                templateName={(id) => TEMPLATES.find((t) => t.id === templates[id])?.name}
+                handlers={{
+                  onEdit: setEditId,
+                  onPreview: (id) => {
+                    setPreviewPanel(textOnly ? "text" : "email");
+                    setPreviewId(id);
+                  },
+                  onTemplate: textOnly ? undefined : setPickFor,
 
-              <div className="grid min-h-0 place-items-center overflow-y-auto p-6">
-                <div className="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-10 text-center">
-                  <span className="absolute right-3 top-3 grid size-7 place-items-center rounded-lg bg-slate-50 text-slate-400">
-                    {channel === "text" ? <MessageSquare size={13} /> : <Mail size={13} />}
-                  </span>
-                  <span className="mx-auto grid size-11 place-items-center rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 text-white">
-                    {channel === "text" ? <MessageSquare size={19} /> : <Mail size={19} />}
-                  </span>
-                  <p className="mt-4 text-[15px] font-semibold tracking-tight text-slate-900">
-                    {messages[0]!.name}
-                  </p>
-                  <p className="mt-1.5 text-[12.5px] text-slate-500">
-                    The first message sent when your campaign begins.
-                  </p>
-                </div>
-              </div>
+                  onDeleteNode: (nodeId) => setNodes((n) => removeNode(n, nodeId)),
+                  onWait: (nodeId, w) => setNodes((n) => patchNode(n, nodeId, { wait: w })),
+                  onRuleWait: (ruleId, w) => setNodes((n) => patchNode(n, ruleId, { wait: w })),
+                  onAddFollowUp: addFollowUp,
+                  onAddRule: setRuleFor,
+                }}
+              />
             </div>
-          ) : null}
-
-          {step === 1 ? (
-            <div className="h-full overflow-y-auto px-5 py-7">
-              <div className="mx-auto w-full max-w-5xl">
-                <JourneyCanvas
-                  stage={stage}
-                  nodes={nodes}
-                  messages={messages}
-                  channel={channel}
-                  templateName={(id) => TEMPLATES.find((t) => t.id === templates[id])?.name}
-                  handlers={{
-                    onEdit: setEditId,
-                    onPreview: (id) => {
-                      setPreviewPanel(textOnly ? "text" : "email");
-                      setPreviewId(id);
-                    },
-                    onTemplate: textOnly ? undefined : setPickFor,
-
-                    onDeleteNode: (nodeId) => setNodes((n) => removeNode(n, nodeId)),
-                    onWait: (nodeId, w) => setNodes((n) => patchNode(n, nodeId, { wait: w })),
-                    onRuleWait: (ruleId, w) => setNodes((n) => patchNode(n, ruleId, { wait: w })),
-                    onAddFollowUp: addFollowUp,
-                    onAddRule: setRuleFor,
-                  }}
-                />
-              </div>
-            </div>
-          ) : null}
-
-          {step === 2 ? (
-            <div className="h-full overflow-y-auto px-5 py-7">
-              <div className="mx-auto w-full max-w-2xl space-y-4">
-                <div className="rounded-xl border border-slate-200 bg-white p-5">
-                  <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">
-                    Ready to launch
-                  </h3>
-                  <p className="mt-1 text-[12.5px] leading-relaxed text-slate-500">
-                    {stage.purpose}
-                  </p>
-                  <dl className="mt-4 grid gap-px overflow-hidden rounded-lg bg-slate-200 sm:grid-cols-3">
-                    <div className="bg-white p-3.5">
-                      <dt className="text-[11px] text-slate-500">Strategy</dt>
-                      <dd className="mt-1 text-[13px] font-semibold text-slate-900">
-                        {STRATEGIES.find((s) => s.id === strategy)!.label}
-                      </dd>
-                    </div>
-                    <div className="bg-white p-3.5">
-                      <dt className="text-[11px] text-slate-500">Messages</dt>
-                      <dd className="mt-1 text-[13px] font-semibold text-slate-900">
-                        {messages.length}
-                      </dd>
-                    </div>
-                    <div className="bg-white p-3.5">
-                      <dt className="text-[11px] text-slate-500">Offers attached</dt>
-                      <dd className="mt-1 text-[13px] font-semibold text-slate-900">
-                        {messages.filter((m) => m.offer.enabled).length}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-                <button
-                  type="button"
-                  onClick={save}
-                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
-                >
-                  <Rocket size={14} /> Launch campaign
-                </button>
-              </div>
-            </div>
-          ) : null}
+          </div>
         </div>
+
 
         {/* Footer */}
         <footer className="flex shrink-0 items-center justify-end gap-2.5 border-t border-slate-200 bg-white px-5 py-3.5">
