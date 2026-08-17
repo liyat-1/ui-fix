@@ -37,7 +37,7 @@ const LABEL: Record<CaptureKind, string> = {
 export const CAPTURE_LABEL_LONG: Record<CaptureKind, string> = {
   email: "Email addresses",
   phone: "Phone numbers",
-  address: "Mailing addresses",
+  address: "Home addresses",
 };
 
 /** Stable per-stage, per-kind momentum so every tile can show direction. */
