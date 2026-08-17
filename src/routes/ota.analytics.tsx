@@ -107,6 +107,34 @@ function Th({
 
 const CAP_ICON = { email: Mail, phone: Phone, address: Home } as const;
 
+const CAP_LABEL = {
+  email: "Email addresses",
+  phone: "Phone numbers",
+  address: "Home addresses",
+} as const;
+
+/** Solid, editorial KPI colours — one per metric, no gradients. */
+const KPI_COLOR: Record<string, string> = {
+  ota: "bg-slate-800",
+  reached: "bg-indigo-600",
+  conversions: "bg-teal-700",
+  revenue: "bg-emerald-700",
+  commission: "bg-blue-800",
+  email: "bg-violet-700",
+  phone: "bg-sky-700",
+  address: "bg-cyan-800",
+};
+
+function SolidDelta({ value }: { value: number }) {
+  const up = value >= 0;
+  return (
+    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-white/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-white">
+      {up ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+      {Math.abs(value).toFixed(1)}%
+    </span>
+  );
+}
+
 function OtaAnalyticsScreen() {
   const [period, setPeriod] = useState<AnalyticsPeriod>("30d");
   const [compare, setCompare] = useState(true);
@@ -157,87 +185,82 @@ function OtaAnalyticsScreen() {
         </div>
       </header>
 
-      {/* Level 1 — executive summary */}
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      {/* Level 1 — executive summary, solid KPI cards */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {cards.map((k) => (
-          <article
-            key={k.key}
-            className="rounded-xl border border-slate-200 bg-white p-5 transition-colors hover:border-slate-300"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="text-[12.5px] font-medium text-slate-500">{k.label}</h3>
-              <Delta value={k.delta} />
-            </div>
-            <p className="mt-3 text-[30px] font-semibold leading-none tabular-nums tracking-tight text-slate-900">
+          <article key={k.key} className={`rounded-xl p-5 text-white ${KPI_COLOR[k.key] ?? "bg-slate-800"}`}>
+            <h3 className="text-[12.5px] font-medium text-white/80">{k.label}</h3>
+            <p className="mt-2 text-[30px] font-semibold leading-none tabular-nums tracking-tight">
               {k.value}
             </p>
-            <p className="mt-2.5 text-[11.5px] leading-snug text-slate-500">{k.meta}</p>
+            <div className="mt-3 flex items-start gap-2 text-[11.5px] leading-snug text-white/75">
+              <SolidDelta value={k.delta} />
+              <span>{k.meta}</span>
+            </div>
           </article>
         ))}
 
-        <article className="rounded-xl border border-slate-200 bg-white p-5 transition-colors hover:border-slate-300">
-          <h3 className="text-[12.5px] font-medium text-slate-500">Guest data captured</h3>
-          <ul className="mt-3 divide-y divide-slate-100">
-            {captured.map((c) => {
-              const Icon = CAP_ICON[c.key as keyof typeof CAP_ICON];
-              return (
-                <li key={c.key} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
-                  <span className="flex min-w-0 items-center gap-2 text-[12px] text-slate-500">
-                    <Icon size={13} className="shrink-0 text-slate-400" />
-                    <span className="truncate">{c.label}</span>
-                  </span>
-                  <span className="flex shrink-0 items-center gap-2.5">
-                    <span className="text-[17px] font-semibold tabular-nums tracking-tight text-slate-900">
-                      {c.value}
-                    </span>
-                    <Delta value={c.delta} />
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </article>
+        {captured.map((c) => {
+          const Icon = CAP_ICON[c.key as keyof typeof CAP_ICON];
+          return (
+            <article
+              key={c.key}
+              className={`rounded-xl p-5 text-white ${KPI_COLOR[c.key] ?? "bg-slate-800"}`}
+            >
+              <h3 className="flex items-center gap-2 text-[12.5px] font-medium text-white/80">
+                <Icon size={13} className="shrink-0" aria-hidden />
+                {c.label}
+              </h3>
+              <p className="mt-2 text-[30px] font-semibold leading-none tabular-nums tracking-tight">
+                {c.value}
+              </p>
+              <p className="mt-3 flex items-center gap-2 text-[11.5px] text-white/75">
+                <SolidDelta value={c.delta} />
+                vs. previous period
+              </p>
+            </article>
+          );
+        })}
       </div>
 
-      {/* Level 2 — capture by source */}
+      {/* Level 2 — capture by source, three cards instead of a table */}
       <Section
         title="Guest data captured by source"
         subtitle="Where the guest information in your database comes from."
       >
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[680px] border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/80">
-                <Th>Source</Th>
-                <Th right>Emails</Th>
-                <Th right>Phones</Th>
-                <Th right>Addresses</Th>
-                <Th right>Guests captured</Th>
-                <Th right>Capture rate</Th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {sourceRows(period).map((r) => (
-                <tr key={r.source} className="transition-colors hover:bg-slate-50/70">
-                  <td className="px-3 py-3">
-                    <p className="text-[13px] font-semibold text-slate-900">{r.source}</p>
-                    <p className="mt-0.5 text-[11.5px] text-slate-500">{r.hint}</p>
-                  </td>
-                  {[r.emails, r.phones, r.addresses, r.guests].map((v, i) => (
-                    <td
-                      key={i}
-                      className="px-3 py-3 text-right text-[13.5px] font-semibold tabular-nums text-slate-900"
-                    >
-                      {v}
-                    </td>
-                  ))}
-                  <td className="px-3 py-3 text-right text-[13px] font-medium tabular-nums text-slate-600">
-                    {r.rate}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {sourceRows(period).map((r) => (
+            <div key={r.source} className="rounded-xl border border-slate-200 bg-white p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate text-[13px] font-semibold text-slate-900">{r.source}</p>
+                  <p className="mt-0.5 text-[11.5px] leading-snug text-slate-500">{r.hint}</p>
+                </div>
+                <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-slate-600">
+                  {r.rate}
+                </span>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                {(
+                  [
+                    ["email", r.emails],
+                    ["phone", r.phones],
+                    ["address", r.addresses],
+                  ] as const
+                ).map(([kind, value]) => {
+                  const Icon = CAP_ICON[kind];
+                  return (
+                    <span key={kind} className="flex items-center gap-1.5" title={CAP_LABEL[kind]}>
+                      <Icon size={13} className="shrink-0 text-slate-400" aria-hidden />
+                      <span className="text-[13.5px] font-semibold tabular-nums text-slate-900">
+                        {value}
+                      </span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </Section>
 

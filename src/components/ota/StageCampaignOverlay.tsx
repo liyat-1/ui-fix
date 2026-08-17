@@ -6,7 +6,6 @@ import {
   MessageSquare,
   Pencil,
   Repeat,
-  Rocket,
   Save,
   X,
 } from "lucide-react";
@@ -89,17 +88,13 @@ const TEMPLATES = [
   { id: "minimal", name: "Minimal", copy: "Text-first layout that reads like a personal note." },
 ];
 
-const STEPS = ["Channel Strategy", "Sequence", "Promote & Launch"] as const;
-
 /**
- * The stage campaign editor, as a layered overlay: a three-step wizard, with
+ * The stage campaign editor, as a layered overlay: the sequence canvas, with
  * template selection and the message editor stacked on top of it.
  */
 export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose: () => void }) {
-  const [step, setStep] = useState(0);
-  const [strategy, setStrategy] = useState<StrategyId>(
-    stage.channel === "text" ? "text" : stage.channel === "both" ? "both" : "email",
-  );
+  const strategy: StrategyId =
+    stage.channel === "text" ? "text" : stage.channel === "both" ? "both" : "email";
   const [messages, setMessages] = useState<SequenceMessage[]>(() =>
     stage.sequence.map((m) => ({ ...m })),
   );
@@ -117,13 +112,6 @@ export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose
   const editing = messages.find((m) => m.id === editId) ?? null;
   const previewing = messages.find((m) => m.id === previewId) ?? null;
   const defaultWait: Wait = stage.condition?.wait ?? { value: 2, unit: "days" };
-
-  /** Picking a strategy rewrites every message channel, so editors follow suit. */
-  const pickStrategy = (id: StrategyId) => {
-    setStrategy(id);
-    const next = STRATEGIES.find((s) => s.id === id)!.channel;
-    setMessages((list) => list.map((m) => ({ ...m, channel: next })));
-  };
 
   const patchMsg = (id: string, p: Partial<SequenceMessage>) =>
     setMessages((list) => list.map((m) => (m.id === id ? { ...m, ...p } : m)));
@@ -197,12 +185,10 @@ export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose
             </h2>
             <Pencil size={14} className="shrink-0 text-slate-400" />
           </div>
-          {step > 0 ? (
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 text-[12px] font-medium text-slate-700">
-              {channel === "text" ? <MessageSquare size={13} /> : <Mail size={13} />}
-              {STRATEGIES.find((s) => s.id === strategy)!.label}
-            </span>
-          ) : null}
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 text-[12px] font-medium text-slate-700">
+            {channel === "text" ? <MessageSquare size={13} /> : <Mail size={13} />}
+            {STRATEGIES.find((s) => s.id === strategy)!.label}
+          </span>
           <button
             type="button"
             onClick={onClose}
@@ -213,198 +199,39 @@ export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose
           </button>
         </header>
 
-        {/* Steps */}
-        <nav className="grid shrink-0 grid-cols-3 gap-4 border-b border-slate-200 px-5">
-          {STEPS.map((label, i) => (
-            <button key={label} type="button" onClick={() => setStep(i)} className="pb-0 text-left">
-              <span className="flex items-center gap-2 pb-3">
-                <span
-                  className={`grid size-6 place-items-center rounded-lg text-[11px] font-bold ${
-                    i < step
-                      ? "text-blue-600"
-                      : i === step
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  {i < step ? <Check size={13} /> : i + 1}
-                </span>
-                <span
-                  className={`text-[13.5px] ${
-                    i === step ? "font-semibold text-slate-900" : "text-slate-500"
-                  }`}
-                >
-                  {label}
-                </span>
-              </span>
-              <span
-                className={`block h-[3px] rounded-full ${
-                  i === step ? "bg-blue-600" : i < step ? "bg-blue-200" : "bg-slate-200"
-                }`}
+
+        {/* Body — the sequence is the whole editor */}
+        <div className="min-h-0 flex-1 overflow-hidden border-t border-slate-200 bg-slate-50">
+          <div className="h-full overflow-y-auto px-5 py-7">
+            <div className="mx-auto w-full max-w-5xl">
+              <JourneyCanvas
+                stage={stage}
+                nodes={nodes}
+                messages={messages}
+                channel={channel}
+                templateName={(id) => TEMPLATES.find((t) => t.id === templates[id])?.name}
+                handlers={{
+                  onEdit: setEditId,
+                  onPreview: (id) => {
+                    setPreviewPanel(textOnly ? "text" : "email");
+                    setPreviewId(id);
+                  },
+                  onTemplate: textOnly ? undefined : setPickFor,
+
+                  onDeleteNode: (nodeId) => setNodes((n) => removeNode(n, nodeId)),
+                  onWait: (nodeId, w) => setNodes((n) => patchNode(n, nodeId, { wait: w })),
+                  onRuleWait: (ruleId, w) => setNodes((n) => patchNode(n, ruleId, { wait: w })),
+                  onAddFollowUp: addFollowUp,
+                  onAddRule: setRuleFor,
+                }}
               />
-            </button>
-          ))}
-        </nav>
-
-        {/* Body */}
-        <div className="min-h-0 flex-1 overflow-hidden bg-slate-50">
-          {step === 0 ? (
-            <div className="grid h-full grid-cols-1 overflow-hidden lg:grid-cols-[31rem_minmax(0,1fr)]">
-              <div className="min-h-0 overflow-y-auto border-r border-slate-200 bg-white p-5">
-                <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">
-                  Select channel strategy
-                </h3>
-                <p className="mt-1 text-[12.5px] text-slate-500">
-                  Choose how this campaign will be delivered and preview each experience.
-                </p>
-                <div className="mt-4 space-y-3">
-                  {STRATEGIES.map((s) => {
-                    const active = s.id === strategy;
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => pickStrategy(s.id)}
-                        aria-pressed={active}
-                        className={`w-full rounded-xl border p-4 text-left transition-colors ${
-                          active
-                            ? "border-blue-600 bg-blue-50/60 ring-1 ring-blue-600"
-                            : "border-slate-200 bg-white hover:border-slate-300"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <span className="flex items-center gap-2.5">
-                            <span
-                              className={`grid size-8 place-items-center rounded-lg ${
-                                active ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500"
-                              }`}
-                            >
-                              <s.icon size={15} />
-                            </span>
-                            <span className="text-[14px] font-semibold text-slate-900">
-                              {s.label}
-                            </span>
-                          </span>
-                          <span
-                            className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${
-                              active
-                                ? "border-blue-600 bg-blue-600 text-white"
-                                : "border-slate-300 bg-white"
-                            }`}
-                          >
-                            {active ? <Check size={12} /> : null}
-                          </span>
-                        </div>
-                        <p className="mt-2.5 text-[12.5px] leading-relaxed text-slate-500">
-                          {s.copy}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid min-h-0 place-items-center overflow-y-auto p-6">
-                <div className="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-10 text-center">
-                  <span className="absolute right-3 top-3 grid size-7 place-items-center rounded-lg bg-slate-50 text-slate-400">
-                    {channel === "text" ? <MessageSquare size={13} /> : <Mail size={13} />}
-                  </span>
-                  <span className="mx-auto grid size-11 place-items-center rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 text-white">
-                    {channel === "text" ? <MessageSquare size={19} /> : <Mail size={19} />}
-                  </span>
-                  <p className="mt-4 text-[15px] font-semibold tracking-tight text-slate-900">
-                    {messages[0]!.name}
-                  </p>
-                  <p className="mt-1.5 text-[12.5px] text-slate-500">
-                    The first message sent when your campaign begins.
-                  </p>
-                </div>
-              </div>
             </div>
-          ) : null}
-
-          {step === 1 ? (
-            <div className="h-full overflow-y-auto px-5 py-7">
-              <div className="mx-auto w-full max-w-5xl">
-                <JourneyCanvas
-                  stage={stage}
-                  nodes={nodes}
-                  messages={messages}
-                  channel={channel}
-                  templateName={(id) => TEMPLATES.find((t) => t.id === templates[id])?.name}
-                  handlers={{
-                    onEdit: setEditId,
-                    onPreview: (id) => {
-                      setPreviewPanel(textOnly ? "text" : "email");
-                      setPreviewId(id);
-                    },
-                    onTemplate: textOnly ? undefined : setPickFor,
-
-                    onDeleteNode: (nodeId) => setNodes((n) => removeNode(n, nodeId)),
-                    onWait: (nodeId, w) => setNodes((n) => patchNode(n, nodeId, { wait: w })),
-                    onRuleWait: (ruleId, w) => setNodes((n) => patchNode(n, ruleId, { wait: w })),
-                    onAddFollowUp: addFollowUp,
-                    onAddRule: setRuleFor,
-                  }}
-                />
-              </div>
-            </div>
-          ) : null}
-
-          {step === 2 ? (
-            <div className="h-full overflow-y-auto px-5 py-7">
-              <div className="mx-auto w-full max-w-2xl space-y-4">
-                <div className="rounded-xl border border-slate-200 bg-white p-5">
-                  <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">
-                    Ready to launch
-                  </h3>
-                  <p className="mt-1 text-[12.5px] leading-relaxed text-slate-500">
-                    {stage.purpose}
-                  </p>
-                  <dl className="mt-4 grid gap-px overflow-hidden rounded-lg bg-slate-200 sm:grid-cols-3">
-                    <div className="bg-white p-3.5">
-                      <dt className="text-[11px] text-slate-500">Strategy</dt>
-                      <dd className="mt-1 text-[13px] font-semibold text-slate-900">
-                        {STRATEGIES.find((s) => s.id === strategy)!.label}
-                      </dd>
-                    </div>
-                    <div className="bg-white p-3.5">
-                      <dt className="text-[11px] text-slate-500">Messages</dt>
-                      <dd className="mt-1 text-[13px] font-semibold text-slate-900">
-                        {messages.length}
-                      </dd>
-                    </div>
-                    <div className="bg-white p-3.5">
-                      <dt className="text-[11px] text-slate-500">Offers attached</dt>
-                      <dd className="mt-1 text-[13px] font-semibold text-slate-900">
-                        {messages.filter((m) => m.offer.enabled).length}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-                <button
-                  type="button"
-                  onClick={save}
-                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
-                >
-                  <Rocket size={14} /> Launch campaign
-                </button>
-              </div>
-            </div>
-          ) : null}
+          </div>
         </div>
+
 
         {/* Footer */}
         <footer className="flex shrink-0 items-center justify-end gap-2.5 border-t border-slate-200 bg-white px-5 py-3.5">
-          {step > 0 ? (
-            <button
-              type="button"
-              onClick={() => setStep((s) => s - 1)}
-              className="mr-auto rounded-lg px-3 py-2 text-[12.5px] font-semibold text-slate-600 hover:text-slate-900"
-            >
-              Back
-            </button>
-          ) : null}
           <button
             type="button"
             onClick={save}
@@ -415,10 +242,10 @@ export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose
           </button>
           <button
             type="button"
-            onClick={() => (step < 2 ? setStep((s) => s + 1) : onClose())}
+            onClick={onClose}
             className="rounded-lg bg-blue-600 px-5 py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-blue-700"
           >
-            {step < 2 ? "Next" : "Done"}
+            Done
           </button>
         </footer>
       </div>

@@ -13,7 +13,7 @@ import {
   Pause,
   Play,
   Repeat2,
-  Sparkles,
+  GitBranch,
   Star,
 } from "lucide-react";
 import { Select } from "@/components/editor/Select";
@@ -345,7 +345,7 @@ export function StageCard({
       {stage.branches ? (
         <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 bg-white px-5 py-3">
           <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-            <Sparkles size={12} /> Branches
+            <GitBranch size={12} /> Branches
           </span>
           {stage.branches.map((b) => (
             <SoftBadge

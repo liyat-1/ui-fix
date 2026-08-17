@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, Home, Mail, Phone } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Home, Mail, Phone, Users } from "lucide-react";
 import {
   CAPTURE_KINDS,
   CAPTURE_LABEL_LONG,
@@ -6,7 +6,6 @@ import {
   captureMomentum,
   feedbackOutcomes,
   messageCapture,
-  retainOutcomes,
   stageCapture,
   type CaptureKind,
   type CaptureRow,
@@ -18,6 +17,12 @@ const ICON: Record<CaptureKind, typeof Mail> = {
   phone: Phone,
   address: Home,
 };
+
+const SOURCE_ICON = {
+  campaign: Mail,
+  staff: Users,
+  id_scan: Home,
+} as const;
 
 function Delta({ value }: { value: number }) {
   const up = value >= 0;
@@ -41,7 +46,24 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Three full-width tiles: one per data type captured. */
+/** Icon + number, no sentence. The icon carries the meaning. */
+function KindStat({ kind, value }: { kind: CaptureKind; value: string }) {
+  const Icon = ICON[kind];
+  return (
+    <span
+      className="flex items-center gap-1.5"
+      title={CAPTURE_LABEL_LONG[kind]}
+      aria-label={`${CAPTURE_LABEL_LONG[kind]}: ${value}`}
+    >
+      <Icon size={13} className="shrink-0 text-slate-400" aria-hidden />
+      <span className="text-[13.5px] font-semibold tabular-nums tracking-tight text-slate-900">
+        {value}
+      </span>
+    </span>
+  );
+}
+
+/** Three tiles: one per data type captured. */
 function CaptureTiles({ rows, stageId }: { rows: CaptureRow[]; stageId: StageId }) {
   return (
     <div className="grid gap-2 sm:grid-cols-3">
@@ -69,67 +91,35 @@ function CaptureTiles({ rows, stageId }: { rows: CaptureRow[]; stageId: StageId 
   );
 }
 
-/** Compact matrix: one row per source, one column per data type. */
-function SourceMatrix({ period }: { period: Period }) {
-  const rows = captureBySource(period);
+/** Three horizontal source cards — replaces the old wide table. */
+function SourceCards({ period }: { period: Period }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <table className="w-full border-collapse text-left">
-        <thead>
-          <tr className="border-b border-slate-200 bg-slate-50/80">
-            <th className="px-3.5 py-2 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-              Source
-            </th>
-            {CAPTURE_KINDS.map((k) => (
-              <th
-                key={k}
-                className="px-3 py-2 text-right text-[10.5px] font-semibold uppercase tracking-[0.12em] text-slate-500"
-              >
-                {CAPTURE_LABEL_LONG[k]}
-              </th>
-            ))}
-            <th className="px-3.5 py-2 text-right text-[10.5px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-              Guests
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {rows.map((s) => (
-            <tr key={s.key} className="transition-colors hover:bg-slate-50/70">
-              <td className="px-3.5 py-2.5">
-                <p className="text-[12.5px] font-semibold text-slate-900">{s.label}</p>
-                <p className="mt-0.5 text-[11px] leading-snug text-slate-500">{s.hint}</p>
-              </td>
+    <div className="grid gap-2 sm:grid-cols-3">
+      {captureBySource(period).map((s) => {
+        const Icon = SOURCE_ICON[s.key];
+        return (
+          <div key={s.key} className="rounded-lg border border-slate-200 bg-white px-3.5 py-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="flex min-w-0 items-center gap-1.5 text-[12.5px] font-semibold text-slate-900">
+                <Icon size={13} className="shrink-0 text-slate-400" aria-hidden />
+                <span className="truncate">{s.label}</span>
+              </p>
+              <Delta value={s.momentum} />
+            </div>
+            <div className="mt-2.5 flex items-center justify-between gap-2">
               {CAPTURE_KINDS.map((k) => (
-                <td
-                  key={k}
-                  className="px-3 py-2.5 text-right text-[13px] font-semibold tabular-nums text-slate-900"
-                >
-                  {s.counts[k]}
-                </td>
+                <KindStat key={k} kind={k} value={s.counts[k]} />
               ))}
-              <td className="px-3.5 py-2.5 text-right">
-                <p className="text-[13px] font-semibold tabular-nums text-slate-900">{s.guests}</p>
-                <span className="mt-0.5 inline-flex items-center gap-1.5">
-                  <Delta value={s.momentum} />
-                  <span className="text-[11px] text-slate-400">{s.rate}% rate</span>
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
+/** Positive / negative / no response — value and share only. */
 function FeedbackOutcomes({ period }: { period: Period }) {
-  const outcomes = feedbackOutcomes(period);
-  const bar = {
-    good: "bg-emerald-500",
-    warn: "bg-amber-500",
-    neutral: "bg-slate-300",
-  } as const;
   const dot = {
     good: "bg-emerald-500",
     warn: "bg-amber-500",
@@ -137,94 +127,67 @@ function FeedbackOutcomes({ period }: { period: Period }) {
   } as const;
   return (
     <div className="grid gap-2 sm:grid-cols-3">
-      {outcomes.map((o) => (
-        <div key={o.key} className="rounded-lg border border-slate-200 bg-white px-3.5 py-3">
-          <p className="flex items-center gap-1.5 text-[11.5px] font-medium text-slate-500">
-            <span aria-hidden className={`size-1.5 rounded-full ${dot[o.tone]}`} />
-            {o.label}
+      {feedbackOutcomes(period).map((o) => (
+        <div
+          key={o.key}
+          className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3.5 py-3"
+        >
+          <p className="flex min-w-0 items-center gap-1.5 text-[11.5px] font-medium text-slate-500">
+            <span aria-hidden className={`size-1.5 shrink-0 rounded-full ${dot[o.tone]}`} />
+            <span className="truncate">{o.label}</span>
           </p>
-          <p className="mt-1 flex items-baseline gap-2">
-            <span className="text-[20px] font-semibold leading-none tabular-nums tracking-tight text-slate-900">
+          <p className="flex shrink-0 items-baseline gap-2">
+            <span className="text-[18px] font-semibold leading-none tabular-nums tracking-tight text-slate-900">
               {o.value}
             </span>
             <span className="text-[11.5px] font-semibold tabular-nums text-slate-500">
               {o.share}%
             </span>
           </p>
-          <span
-            aria-hidden
-            className="mt-2.5 block h-1 w-full overflow-hidden rounded-full bg-slate-100"
-          >
-            <span className={`block h-full rounded-full ${bar[o.tone]}`} style={{ width: `${o.share}%` }} />
-          </span>
-          <p className="mt-2 text-[11px] leading-snug text-slate-500">{o.hint}</p>
         </div>
       ))}
     </div>
   );
 }
 
-function RetainOutcomes({ period }: { period: Period }) {
-  return (
-    <div className="grid gap-2 sm:grid-cols-3">
-      {retainOutcomes(period).map((k) => (
-        <div key={k.key} className="rounded-lg border border-slate-200 bg-white px-3.5 py-3">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-[11.5px] font-medium text-slate-500">{k.label}</p>
-            <Delta value={k.momentum} />
-          </div>
-          <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums tracking-tight text-slate-900">
-            {k.value}
-          </p>
-          <p className="mt-2 text-[11px] leading-snug text-slate-500">{k.hint}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/** Stage-level guest-data block shown inside every journey stage card. */
+/** Stage-level guest-data block shown inside journey stage cards. */
 export function StageGuestData({ stageId, period }: { stageId: StageId; period: Period }) {
-  const rows = stageCapture(stageId, period);
+  // During Stay reports capture by source instead of the generic totals.
+  if (stageId === "during_stay") {
+    return (
+      <div className="border-t border-slate-200 bg-slate-50/70 px-5 py-4">
+        <Eyebrow>Guest data captured by source</Eyebrow>
+        <div className="mt-2.5">
+          <SourceCards period={period} />
+        </div>
+      </div>
+    );
+  }
+
+  if (stageId === "post_checkout") {
+    return (
+      <div className="border-t border-slate-200 bg-slate-50/70 px-5 py-4">
+        <Eyebrow>Feedback outcomes</Eyebrow>
+        <div className="mt-2.5">
+          <FeedbackOutcomes period={period} />
+        </div>
+      </div>
+    );
+  }
+
+  if (stageId === "retain") return null;
 
   return (
     <div className="border-t border-slate-200 bg-slate-50/70 px-5 py-4">
       <Eyebrow>Guest data captured</Eyebrow>
       <div className="mt-2.5">
-        <CaptureTiles rows={rows} stageId={stageId} />
+        <CaptureTiles rows={stageCapture(stageId, period)} stageId={stageId} />
       </div>
-
-      {stageId === "during_stay" ? (
-        <div className="mt-4">
-          <Eyebrow>By capture source</Eyebrow>
-          <div className="mt-2">
-            <SourceMatrix period={period} />
-          </div>
-        </div>
-      ) : null}
-
-      {stageId === "post_checkout" ? (
-        <div className="mt-4">
-          <Eyebrow>Feedback outcomes</Eyebrow>
-          <div className="mt-2">
-            <FeedbackOutcomes period={period} />
-          </div>
-        </div>
-      ) : null}
-
-      {stageId === "retain" ? (
-        <div className="mt-4">
-          <Eyebrow>Direct relationship</Eyebrow>
-          <div className="mt-2">
-            <RetainOutcomes period={period} />
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
 
-/** Per-message capture strip used inside sequence cards — fills the card width. */
+/** Per-message capture strip — icons only, one compact line. */
 export function MessageGuestData({
   stageId,
   msgId,
@@ -236,27 +199,13 @@ export function MessageGuestData({
 }) {
   const rows = messageCapture(stageId, msgId, period);
   return (
-    <div className="mt-3 w-full rounded-lg border border-slate-200 bg-slate-50/70 px-3.5 py-3">
-      <Eyebrow>Guest data captured</Eyebrow>
-      <div className="mt-2 grid gap-2 sm:grid-cols-3">
-        {rows.map((r) => {
-          const Icon = ICON[r.key];
-          return (
-            <div
-              key={r.key}
-              className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-white px-3 py-2"
-            >
-              <span className="flex min-w-0 items-center gap-1.5 text-[11.5px] font-medium text-slate-500">
-                <Icon size={12} className="shrink-0 text-slate-400" />
-                <span className="truncate">{CAPTURE_LABEL_LONG[r.key]}</span>
-              </span>
-              <span className="text-[15px] font-semibold tabular-nums tracking-tight text-slate-900">
-                {r.value}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+    <div className="mt-2.5 inline-flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2">
+      <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+        Captured
+      </span>
+      {rows.map((r) => (
+        <KindStat key={r.key} kind={r.key} value={r.value} />
+      ))}
     </div>
   );
 }
