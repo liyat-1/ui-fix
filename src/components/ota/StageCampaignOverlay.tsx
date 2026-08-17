@@ -6,7 +6,6 @@ import {
   MessageSquare,
   Pencil,
   Repeat,
-  Rocket,
   Save,
   X,
 } from "lucide-react";
@@ -89,14 +88,11 @@ const TEMPLATES = [
   { id: "minimal", name: "Minimal", copy: "Text-first layout that reads like a personal note." },
 ];
 
-const STEPS = ["Channel Strategy", "Sequence", "Promote & Launch"] as const;
-
 /**
- * The stage campaign editor, as a layered overlay: a three-step wizard, with
+ * The stage campaign editor, as a layered overlay: the sequence canvas, with
  * template selection and the message editor stacked on top of it.
  */
 export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose: () => void }) {
-  const [step, setStep] = useState(0);
   const [strategy, setStrategy] = useState<StrategyId>(
     stage.channel === "text" ? "text" : stage.channel === "both" ? "both" : "email",
   );
@@ -117,13 +113,6 @@ export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose
   const editing = messages.find((m) => m.id === editId) ?? null;
   const previewing = messages.find((m) => m.id === previewId) ?? null;
   const defaultWait: Wait = stage.condition?.wait ?? { value: 2, unit: "days" };
-
-  /** Picking a strategy rewrites every message channel, so editors follow suit. */
-  const pickStrategy = (id: StrategyId) => {
-    setStrategy(id);
-    const next = STRATEGIES.find((s) => s.id === id)!.channel;
-    setMessages((list) => list.map((m) => ({ ...m, channel: next })));
-  };
 
   const patchMsg = (id: string, p: Partial<SequenceMessage>) =>
     setMessages((list) => list.map((m) => (m.id === id ? { ...m, ...p } : m)));
