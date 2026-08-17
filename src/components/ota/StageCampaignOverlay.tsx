@@ -197,12 +197,10 @@ export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose
             </h2>
             <Pencil size={14} className="shrink-0 text-slate-400" />
           </div>
-          {step > 0 ? (
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 text-[12px] font-medium text-slate-700">
-              {channel === "text" ? <MessageSquare size={13} /> : <Mail size={13} />}
-              {STRATEGIES.find((s) => s.id === strategy)!.label}
-            </span>
-          ) : null}
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 text-[12px] font-medium text-slate-700">
+            {channel === "text" ? <MessageSquare size={13} /> : <Mail size={13} />}
+            {STRATEGIES.find((s) => s.id === strategy)!.label}
+          </span>
           <button
             type="button"
             onClick={onClose}
@@ -213,38 +211,6 @@ export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose
           </button>
         </header>
 
-        {/* Steps */}
-        <nav className="grid shrink-0 grid-cols-3 gap-4 border-b border-slate-200 px-5">
-          {STEPS.map((label, i) => (
-            <button key={label} type="button" onClick={() => setStep(i)} className="pb-0 text-left">
-              <span className="flex items-center gap-2 pb-3">
-                <span
-                  className={`grid size-6 place-items-center rounded-lg text-[11px] font-bold ${
-                    i < step
-                      ? "text-blue-600"
-                      : i === step
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  {i < step ? <Check size={13} /> : i + 1}
-                </span>
-                <span
-                  className={`text-[13.5px] ${
-                    i === step ? "font-semibold text-slate-900" : "text-slate-500"
-                  }`}
-                >
-                  {label}
-                </span>
-              </span>
-              <span
-                className={`block h-[3px] rounded-full ${
-                  i === step ? "bg-blue-600" : i < step ? "bg-blue-200" : "bg-slate-200"
-                }`}
-              />
-            </button>
-          ))}
-        </nav>
 
         {/* Body — the sequence is the whole editor */}
         <div className="min-h-0 flex-1 overflow-hidden border-t border-slate-200 bg-slate-50">
