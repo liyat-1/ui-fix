@@ -193,10 +193,10 @@ function OtaAnalyticsScreen() {
             <p className="mt-2 text-[30px] font-semibold leading-none tabular-nums tracking-tight">
               {k.value}
             </p>
-            <p className="mt-3 flex items-center gap-2 text-[11.5px] text-white/75">
+            <div className="mt-3 flex items-start gap-2 text-[11.5px] leading-snug text-white/75">
               <SolidDelta value={k.delta} />
-              <span className="truncate">{k.meta}</span>
-            </p>
+              <span>{k.meta}</span>
+            </div>
           </article>
         ))}
 
