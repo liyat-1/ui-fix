@@ -396,15 +396,6 @@ export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose
 
         {/* Footer */}
         <footer className="flex shrink-0 items-center justify-end gap-2.5 border-t border-slate-200 bg-white px-5 py-3.5">
-          {step > 0 ? (
-            <button
-              type="button"
-              onClick={() => setStep((s) => s - 1)}
-              className="mr-auto rounded-lg px-3 py-2 text-[12.5px] font-semibold text-slate-600 hover:text-slate-900"
-            >
-              Back
-            </button>
-          ) : null}
           <button
             type="button"
             onClick={save}
@@ -415,10 +406,10 @@ export function StageCampaignOverlay({ stage, onClose }: { stage: Stage; onClose
           </button>
           <button
             type="button"
-            onClick={() => (step < 2 ? setStep((s) => s + 1) : onClose())}
+            onClick={onClose}
             className="rounded-lg bg-blue-600 px-5 py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-blue-700"
           >
-            {step < 2 ? "Next" : "Done"}
+            Done
           </button>
         </footer>
       </div>
