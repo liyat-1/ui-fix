@@ -190,24 +190,54 @@ export function OtaShell({ children }: { children: ReactNode }) {
   const [bellOpen, setBellOpen] = useState(false);
 
   return (
-    <div className="min-h-dvh bg-slate-50 text-slate-900">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-[84rem] items-center justify-between gap-4 px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2">
-              <span className="grid size-6 place-items-center rounded-md bg-slate-900">
-                <span className="size-2 rotate-45 bg-white" />
-              </span>
-              <span className="text-[13px] font-semibold tracking-tight">Directful</span>
-            </Link>
-            <span className="h-4 w-px bg-slate-200" />
-            <span className="text-[13px] font-semibold text-slate-900">OTA Buster</span>
-            <Pill tone="good">
-              <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden />
-              Active
-            </Pill>
-          </div>
-          <div className="flex items-center gap-2">
+    <div className="min-h-dvh bg-slate-50 text-slate-900 lg:flex">
+      {/* Sidebar */}
+      <aside className="sticky top-0 z-40 shrink-0 border-b border-slate-200 bg-white lg:h-dvh lg:w-60 lg:border-b-0 lg:border-r">
+        <div className="flex h-14 items-center gap-2 px-4 lg:px-5">
+          <Link to="/" className="flex items-center gap-2">
+            <span className="grid size-6 place-items-center rounded-md bg-slate-900">
+              <span className="size-2 rotate-45 bg-white" />
+            </span>
+            <span className="text-[13px] font-semibold tracking-tight">Directful</span>
+          </Link>
+        </div>
+        <nav aria-label="OTA Buster sections" className="px-3 pb-3 lg:px-3">
+          <p className="hidden px-2 pb-1.5 pt-2 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-400 lg:block">
+            OTA Buster
+          </p>
+          <ul className="flex gap-1 overflow-x-auto lg:block lg:space-y-0.5 lg:overflow-visible">
+            {NAV.map((item) => {
+              const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+              return (
+                <li key={item.to}>
+                  <Link
+                    to={item.to as "/"}
+                    className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-2.5 py-2 text-[12.5px] font-semibold transition-colors ${
+                      active
+                        ? "bg-blue-50 text-blue-700"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    }`}
+                  >
+                    <item.icon size={14} className={active ? "text-blue-600" : "text-slate-400"} />
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </aside>
+
+      <div className="min-w-0 flex-1">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+          <div className="mx-auto flex h-14 max-w-[84rem] items-center justify-between gap-4 px-4 sm:px-6">
+            <div className="flex items-center gap-3">
+              <span className="text-[13px] font-semibold text-slate-900">OTA Buster</span>
+              <Pill tone="good">
+                <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden />
+                Active
+              </Pill>
+            </div>
             <div className="relative">
               <button
                 onClick={() => setBellOpen((o) => !o)}
@@ -242,30 +272,9 @@ export function OtaShell({ children }: { children: ReactNode }) {
               ) : null}
             </div>
           </div>
-        </div>
-        <nav aria-label="OTA Buster sections" className="mx-auto max-w-[84rem] px-4 sm:px-6">
-          <ul className="-mb-px flex gap-1 overflow-x-auto">
-            {NAV.map((item) => {
-              const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
-              return (
-                <li key={item.to}>
-                  <Link
-                    to={item.to as "/"}
-                    className={`inline-block whitespace-nowrap border-b-2 px-3 py-2.5 text-[12.5px] font-semibold transition-colors ${
-                      active
-                        ? "border-blue-600 text-blue-700"
-                        : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-900"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      </header>
-      <main className="mx-auto max-w-[84rem] px-4 pb-24 pt-7 sm:px-6">{children}</main>
+        </header>
+        <main className="mx-auto max-w-[84rem] px-4 pb-24 pt-7 sm:px-6">{children}</main>
+      </div>
     </div>
   );
 }
